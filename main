@@ -1,0 +1,243 @@
+#include "U8glib.h"
+#include "utility/u8g.h"
+U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NONE); //设置OLED型号
+#define setFont_M u8g.setFont(u8g_font_fixed_v0r)
+const   uint8_t bitmap_a []   U8G_PROGMEM  = {
+  0x00, 0x00, 0x23, 0xF8, 0x12, 0x08, 0x12, 0x08, 0x83, 0xF8, 0x42, 0x08, 0x42, 0x08, 0x13, 0xF8,
+  0x10, 0x00, 0x27, 0xFC, 0xE4, 0xA4, 0x24, 0xA4, 0x24, 0xA4, 0x24, 0xA4, 0x2F, 0xFE, 0x00, 0x00
+};
+const   uint8_t bitmap_b []   U8G_PROGMEM  = {
+  0x01, 0x00, 0x00, 0x80, 0x3F, 0xFE, 0x22, 0x20, 0x22, 0x20, 0x3F, 0xFC, 0x22, 0x20, 0x22, 0x20,
+  0x23, 0xE0, 0x20, 0x00, 0x2F, 0xF0, 0x24, 0x10, 0x42, 0x20, 0x41, 0xC0, 0x86, 0x30, 0x38, 0x0E
+};
+const   uint8_t bitmap_c []   U8G_PROGMEM  = {
+  0x00, 0x00, 0x27, 0xF8, 0x14, 0x08, 0x14, 0x08, 0x87, 0xF8, 0x44, 0x08, 0x44, 0x08, 0x17, 0xF8,
+  0x11, 0x20, 0x21, 0x20, 0xE9, 0x24, 0x25, 0x28, 0x23, 0x30, 0x21, 0x20, 0x2F, 0xFE, 0x00, 0x00
+};
+const   uint8_t bitmap_d []   U8G_PROGMEM  = {
+  0x01, 0x00, 0x00, 0x80, 0x3F, 0xFE, 0x22, 0x20, 0x22, 0x20, 0x3F, 0xFC, 0x22, 0x20, 0x22, 0x20,
+  0x23, 0xE0, 0x20, 0x00, 0x2F, 0xF0, 0x24, 0x10, 0x42, 0x20, 0x41, 0xC0, 0x86, 0x30, 0x38, 0x0E
+};
+const   uint8_t bitmap_e []   U8G_PROGMEM  = {
+  0x01, 0x00, 0x21, 0x08, 0x11, 0x08, 0x09, 0x10, 0x09, 0x20, 0x01, 0x00, 0xFF, 0xFE, 0x04, 0x40,
+  0x04, 0x40, 0x04, 0x40, 0x04, 0x40, 0x08, 0x42, 0x08, 0x42, 0x10, 0x42, 0x20, 0x3E, 0xC0, 0x00
+};
+const   uint8_t bitmap_f []   U8G_PROGMEM  = {
+  0x00, 0x00, 0x7D, 0xFC, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x94, 0x7D, 0x08, 0x44, 0xFC,
+  0x44, 0x84, 0x44, 0x84, 0x44, 0x84, 0x7C, 0xFC, 0x00, 0x00, 0x48, 0x88, 0x44, 0x44, 0x84, 0x44
+};
+
+
+#define INTERVAL_SENSOR   17000             //定义传感器采样时间间隔  597000
+#define INTERVAL_NET      17000             //定义发送时间
+//传感器部分================================
+#include <Wire.h>                                  //调用库  
+#include "./ESP8266.h"
+#include "I2Cdev.h"                                //调用库  
+//温湿度
+#include "./SHT2x.h"
+//光照
+#define  sensorPin_1  A0
+
+#define SSID           F("cgcgzyl1")                   // cannot be longer than 32 characters!
+#define PASSWORD       F("cgcgzyl1")
+#define IDLE_TIMEOUT_MS  3000
+#define HOST_NAME   F("api.heclouds.com")
+#define DEVICEID   F("504865587")
+#define PROJECTID F("190126")
+#define HOST_PORT   (80)
+#define apiKey F("p0zpuTyPqOGKjJ6==eiKvcMyIms=")
+char buf[10];
+#define INTERVAL_sensor 2000
+unsigned long sensorlastTime = millis();
+float tempOLED, humiOLED, lightnessOLED;
+#define INTERVAL_OLED 1000
+String mCottenData;
+String jsonToSend;
+
+
+float sensor_tem, sensor_hum, sensor_lux;                    //传感器温度、湿度、光照
+char  sensor_tem_c[7], sensor_hum_c[7], sensor_lux_c[7] ;    //换成char数组传输
+#include <SoftwareSerial.h>
+SoftwareSerial mySerial(2, 3); /* RX:D3, TX:D2 */
+ESP8266 wifi(mySerial);
+//ESP8266 wifi(Serial1);                                      //定义一个ESP8266（wifi）的对象
+unsigned long net_time1 = millis();                          //数据上传服务器时间
+unsigned long sensor_time = millis();                        //传感器采样时间计时器
+
+//int SensorData;                                   //用于存储传感器数据
+String postString;                                //用于存储发送数据的字符串
+//String jsonToSend;                                //用于存储发送的json格式参数
+#include <Microduino_Key.h>
+#include"colorLed.h"
+#include"userDef.h"
+DigitalKey keyButton(PIN_KEY);
+
+#define humanHotSensor 4
+bool humanHotState = false;
+
+
+void setup(void)     //初始化函数
+{
+  //初始化串口波特率
+  Wire.begin();
+  Serial.begin(115200);
+  while (!Serial);
+  pinMode(sensorPin_1, INPUT);
+  //ESP8266初始化
+  Serial.print("setup begin\r\n");
+  Serial.print("FW Version:");
+  Serial.println(wifi.getVersion().c_str());
+  if (wifi.setOprToStationSoftAP())
+  {
+    Serial.print("to station + softap ok\r\n");
+  }
+  else {
+    Serial.print("to station + softap err\r\n");
+  }
+  if (wifi.joinAP(SSID, PASSWORD))
+  {
+    Serial.print("Join AP success\r\n");
+    Serial.print("IP: ");
+    Serial.println(wifi.getLocalIP().c_str());
+  }
+  else {
+    Serial.print("Join AP failure\r\n");
+  }
+
+  if (wifi.disableMUX()) {
+    Serial.print("single ok\r\n");
+  } else {
+    Serial.print("single err\r\n");
+  }
+
+  Serial.print("setup end\r\n");
+
+  strip.begin();
+  strip.setBrightness(BRIGHT_MAX);
+  keyButton.begin(INPUT_PULLUP);
+  pinMode(humanHotSensor, INPUT);
+}
+
+
+
+void loop(void)     //循环函数
+{
+  humanHotState = digitalRead(humanHotSensor);
+  if (sensor_time > millis())  sensor_time = millis();
+
+  if (millis() - sensor_time > INTERVAL_SENSOR)             //传感器采样时间间隔
+  {
+    getSensorData();                                        //读串口中的传感器数据
+    sensor_time = millis();
+  }
+
+
+  if (net_time1 > millis())  net_time1 = millis();
+
+  if (millis() - net_time1 > INTERVAL_NET)                  //发送数据时间间隔
+  {
+    updateSensorData();                                     //将数据上传到服务器的函数
+    net_time1 = millis();
+  }
+  if ( humanHotState || keyButton.readEvent() == SHORT_PRESS)
+  {
+    uint32_t ledonTime = millis();
+    while (millis() - ledonTime < TIME_ON)
+      //rainbow(10);
+      //ledBreath(COLOR_PURPLE, 10);
+      setAllColor(COLOR_BLUE);
+
+  }
+  else
+    setAllColor(COLOR_NONE);
+  delay(15);
+
+  u8g.firstPage();
+  do  {
+    draw();
+  } while ( u8g.nextPage() );
+}
+
+void getSensorData() {
+  sensor_tem = SHT2x.GetTemperature() ;
+  sensor_hum = SHT2x.GetHumidity();
+  //获取光照
+  sensor_lux = analogRead(A0);
+  delay(1000);
+  dtostrf(sensor_tem, 2, 1, sensor_tem_c);
+  dtostrf(sensor_hum, 2, 1, sensor_hum_c);
+  dtostrf(sensor_lux, 3, 1, sensor_lux_c);
+}
+
+void updateSensorData() {
+  if (wifi.createTCP(HOST_NAME, HOST_PORT)) { //建立TCP连接，如果失败，不能发送该数据
+
+    Serial.print("create tcp ok\r\n");
+    jsonToSend = "{\"Temperature\":";
+    dtostrf(sensor_tem, 1, 2, buf);
+    jsonToSend += "" + String(buf) + "";
+    jsonToSend += ",\"Humidity\":";
+    dtostrf(sensor_hum, 1, 2, buf);
+    jsonToSend += "" + String(buf) + "";
+    jsonToSend += ",\"Light\":";
+    dtostrf(sensor_lux, 1, 2, buf);
+    jsonToSend += "" + String(buf) + "";
+    jsonToSend += "}";
+
+
+
+    postString = "POST /devices/";
+    postString += DEVICEID;
+    postString += "/datapoints?type=3 HTTP/1.1";
+    postString += "\r\n";
+    postString += "api-key:";
+    postString += apiKey;
+    postString += "\r\n";
+    postString += "Host:api.heclouds.com\r\n";
+    postString += "Connection:close\r\n";
+    postString += "Content-Length:";
+    postString += jsonToSend.length();
+    postString += "\r\n";
+    postString += "\r\n";
+    postString += jsonToSend;
+    postString += "\r\n";
+    postString += "\r\n";
+    postString += "\r\n";
+
+    const char *postArray = postString.c_str();                 //将str转化为char数组
+    Serial.println(postArray);
+    wifi.send((const uint8_t*)postArray, strlen(postArray));    //send发送命令，参数必须是这两种格式，尤其是(const uint8_t*)
+    Serial.println("send success");
+    if (wifi.releaseTCP()) {                                 //释放TCP连接
+      Serial.print("release tcp ok\r\n");
+    }
+    else {
+      Serial.print("release tcp err\r\n");
+    }
+    postArray = NULL;                                       //清空数组，等待下次传输数据
+
+  } else {
+    Serial.print("create tcp err\r\n");
+  }
+
+}
+
+void draw(void) {
+  u8g.setColorIndex(1);
+  u8g.drawBitmapP ( 0 , 0 , 2 , 16 , bitmap_a);
+  u8g.drawBitmapP ( 17 , 0 , 2 , 16 , bitmap_b );
+  u8g.drawBitmapP ( 0 , 20 , 2 , 16 , bitmap_c);
+  u8g.drawBitmapP ( 17 , 20 , 2 , 16 , bitmap_d );
+  u8g.drawBitmapP ( 0 , 40 , 2 , 16 , bitmap_e);
+  u8g.drawBitmapP ( 17 , 40 , 2 , 16 , bitmap_f );
+  setFont_M;
+  u8g.setPrintPos(50, 13);
+  u8g.print(sensor_tem, DEC);
+  u8g.setPrintPos(50, 33);
+  u8g.print(sensor_hum, DEC);
+  u8g.setPrintPos(50, 53);
+  u8g.print(sensor_lux, DEC);
+  u8g.setPrintPos(40, 64);
+  u8g.print("for c203");
+}
