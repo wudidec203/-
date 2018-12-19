@@ -1,0 +1,11 @@
+{
+   "pages": ["pages/homepage/homepage","pages/humidity/humidity","pages/light/light","pages/temp/temp"],
+   "window": {
+   "navigationBarBackgroundColor": "#B6DCCF",
+   "navigationBarTextStyle": "black",
+   "backgroundColor": "#eee",
+   "backgroundTextStyle": "light",
+   "enablePullDownRefresh": false
+ }
+}
+  

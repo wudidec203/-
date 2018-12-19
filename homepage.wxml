@@ -1,0 +1,19 @@
+<view class='container1'>
+  <image class='picture1' src="/image/pic1.jpg"></image>
+  <text class='control'>掌上监测</text>
+</view>
+<view class='container2'>
+  <image class='picture2' src="/image/pic2.jpg"></image>
+  <view class='buttons'>
+    <button class="bin1"  bindtap="getDataFromOneNet1">湿度监测
+    </button>
+    <button class="bin2"  bindtap="getDataFromOneNet2">光照监测
+    </button>
+    <button class="bin3"  bindtap="getDataFromOneNet3">温度检测
+    </button>
+  </view>
+  <image class='picture2' src="/image/pic3.jpg"></image>
+</view>
+<view>
+<image class='down' src='/image/down1.jpg'></image>
+</view>

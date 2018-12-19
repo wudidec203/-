@@ -1,0 +1,76 @@
+.container1{
+  align-items: center;
+  background-color: #fff;
+  height: 50vh;
+  text-align: center;
+  }
+
+.container2{
+  display: -webkit-flex;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.picture1{
+width:375rpx;
+height:375rpx;
+margin-top: 70rpx;
+margin-bottom: 40rpx;
+}
+
+.picture2{
+width:170rpx;
+height:170rpx;
+display: flex;
+margin-top: 60rpx;
+
+}
+
+.control
+{
+  display:block;
+  font-size: 60rpx;
+  font-weight: 600;
+  color: rgb(3, 66, 56)
+}
+
+.bin1
+{
+   width:290rpx;
+   height: 90rpx;
+   background-color:	rgba(46, 187, 159, 0.123);
+   font-size:40rpx;
+   margin-top: 0vw;
+   font-weight: 400;
+   color: rgba(13, 102, 87, 0.781)
+} 
+
+.bin2
+{
+   width:290rpx;
+   height: 90rpx;
+   background-color:		rgba(46, 187, 159, 0.123);
+   font-size:40rpx;
+   justify-content: space-around;
+   margin-top: 1vw;
+   color: rgba(13, 102, 87, 0.781)
+}
+
+.bin3
+{
+   width:290rpx;
+   height: 90rpx;
+   background-color:		rgba(46, 187, 159, 0.123);
+   font-size:40rpx;
+   margin-top: 1vw;
+   color: rgba(13, 102, 87, 0.781)
+}
+
+.down
+{
+  width: 100vw;
+  height:36vw;
+  margin-top:10vw; 
+}
+
